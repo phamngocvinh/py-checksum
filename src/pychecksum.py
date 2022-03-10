@@ -18,7 +18,7 @@ def main():
         application_path = os.path.dirname(os.path.abspath(__file__))
 
     is_hash_exists = os.path.exists(
-        os.path.join(application_path, 'pychecksum.hash'))
+        os.path.join(application_path, 'PyChecksum.hash'))
 
     if not is_hash_exists:
         print('Generate Hash')
@@ -41,7 +41,7 @@ def verify_file(path):
     passed_sha256 = False
     passed_sha512 = False
 
-    file_hash = open(os.path.join(path, 'pychecksum.hash'), 'r')
+    file_hash = open(os.path.join(path, 'PyChecksum.hash'), 'r')
     lines = file_hash.readlines()
     for line in lines:
         line = line.strip()
@@ -89,7 +89,7 @@ def verify_file(path):
 
     passed_list = list(dict.fromkeys(passed_list))
 
-    file_result = open(os.path.join(path, 'check_result.txt'), 'w')
+    file_result = open(os.path.join(path, 'PyCheckResult.txt'), 'w')
 
     file_result.write('PASSED:\n')
     for file in passed_list:
@@ -106,11 +106,11 @@ def verify_file(path):
 
 
 def generate_hash(path, appName):
-    file_hash = open(os.path.join(path, 'pychecksum.hash'), 'w')
+    file_hash = open(os.path.join(path, 'PyChecksum.hash'), 'w')
 
     for path, subdirs, files in os.walk(path):
         for name in files:
-            if name == 'pychecksum.hash':
+            if name == 'PyChecksum.hash':
                 continue
             elif name == os.path.basename(appName):
                 continue
