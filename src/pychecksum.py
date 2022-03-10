@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import sys, os
+import hashlib
 
 VERSION = 'v1.0'
 
@@ -14,14 +15,11 @@ def main():
     else:
         application_path = os.path.dirname(os.path.abspath(__file__))
 
-    
-    idx = 0
-    for root, dirs, files in os.walk(application_path):
-        print('1')
-        print(dirs)
-        print(files)
-        # print(os.path.join(dirs[idx]), files[idx])
-        idx += 1
+    list_file = []
+
+    for path, subdirs, files in os.walk(application_path):
+        for name in files:
+            list_file.append(os.path.join(path, name))
 
     input("Press enter to exit")
 
