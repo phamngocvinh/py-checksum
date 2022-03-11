@@ -13,10 +13,10 @@
     <img src="images/icons/icon-192x192.png" alt="Logo" width="80" height="80">
   </a>
 
-  <h3 align="center">Py Checksum</h3>
+  <h3 align="center">PyChecksum</h3>
 
   <p align="center">
-    :shield: Create and verify file with oneclick
+    :shield: Create and verify files hashes with one click
     <br />
     <a href="https://github.com/phamngocvinh/py-checksum"><strong>Explore the docs »</strong></a>
     <br />
@@ -37,7 +37,7 @@
       <a href="#stars-about-the-project">About The Project</a>
     </li>
     <li>
-      <a href="#beginner-getting-started">Getting Started</a>
+      <a href="#beginner-how-to-build">How to Build</a>
     </li>
     <li><a href="#man_teacher-usage">Usage</a></li>
     <li><a href="#world_map-roadmap">Roadmap</a></li>
@@ -51,11 +51,30 @@
 <!-- ABOUT THE PROJECT -->
 ## :stars: About The Project
 
-<!-- GETTING STARTED -->
-## :beginner: Getting Started
+PyChecksum is used to automatically generate and verify multiple files hash with the most popular algorithms
+
+<!-- HOW TO BUILD -->
+## :beginner: How to Build
+
+To get a local copy up and running, follow these simple steps.
+
+1. Clone the repo
+   ```sh
+   git clone https://github.com/phamngocvinh/py-checksum.git
+   ```
+2. Install requirements
+   ```sh
+   pip install -r requirements.txt
+   ```
+3. Run `build.bat`
+4. Executable file will be generated in `dist` folder
 
 <!-- USAGE -->
 ## :man_teacher: Usage
+1. The first time you run EXE, it will generate a hash for all file in the current folder (include sub-folder).
+2. `PyChecksum.hash` containing all file's hashes will be generated.
+3. Any time `PyChecksum.hash` exists, if you run EXE again, it will check the current folder file's hash with hash in `PyChecksum.hash`
+4. `PyCheckResult.txt` containing check result will be generated.
 
 _For more examples, please refer to the [Documentation](https://github.com/phamngocvinh/py-checksum/wiki)_
 
