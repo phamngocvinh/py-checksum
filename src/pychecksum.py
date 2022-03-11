@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+from http.server import executable
 from pickle import TRUE
 import sys
 import os
@@ -8,6 +9,10 @@ VERSION = 'v1.0'
 
 
 def main():
+    global output_path
+    global application_path
+    global executable_name
+
     print(f"PyChecksum-{VERSION}")
     if getattr(sys, 'frozen', False):
         # If the application is run as a bundle, the PyInstaller bootloader
@@ -17,21 +22,24 @@ def main():
     else:
         application_path = os.path.dirname(os.path.abspath(__file__))
 
+    output_path = os.path.basename(os.path.normpath(application_path))
+    executable_name = sys.executable
+
     is_hash_exists = os.path.exists(
         os.path.join(application_path, 'PyChecksum.hash'))
 
     if not is_hash_exists:
         print('Generate Hash')
-        generate_hash(application_path, sys.executable)
+        generate_hash()
     else:
         print('Verify Hash')
-        verify_file(application_path)
+        verify_file()
 
     input("Press enter to exit")
     return
 
 
-def verify_file(path):
+def verify_file():
 
     passed_list = []
     failed_list = []
@@ -41,7 +49,7 @@ def verify_file(path):
     passed_sha256 = False
     passed_sha512 = False
 
-    file_hash = open(os.path.join(path, 'PyChecksum.hash'), 'r')
+    file_hash = open(os.path.join(application_path, 'PyChecksum.hash'), 'r')
     lines = file_hash.readlines()
     for line in lines:
         line = line.strip()
@@ -89,7 +97,8 @@ def verify_file(path):
 
     passed_list = list(dict.fromkeys(passed_list))
 
-    file_result = open(os.path.join(path, 'PyCheckResult.txt'), 'w')
+    file_result = open(os.path.join(application_path, 'PyCheckResult.txt'),
+                       'w')
 
     file_result.write('PASSED:\n')
     for file in passed_list:
@@ -105,14 +114,14 @@ def verify_file(path):
     return
 
 
-def generate_hash(path, appName):
-    file_hash = open(os.path.join(path, 'PyChecksum.hash'), 'w')
+def generate_hash():
+    file_hash = open(os.path.join(application_path, 'PyChecksum.hash'), 'w')
 
-    for path, subdirs, files in os.walk(path):
+    for path, subdirs, files in os.walk(application_path):
         for name in files:
             if name == 'PyChecksum.hash':
                 continue
-            elif name == os.path.basename(appName):
+            elif name == os.path.basename(executable_name):
                 continue
 
             file_path = os.path.join(path, name)
