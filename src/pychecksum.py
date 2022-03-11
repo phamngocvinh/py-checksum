@@ -87,7 +87,8 @@ def verify_file():
                 is_next = True
         else:
             is_next = False
-            file_target = open(os.path.join(application_path, line), 'rb')
+            file_target = open(
+                os.path.join(application_path, line.strip('\\')), 'rb')
             content = file_target.read()
 
             passed_md5 = False
@@ -138,6 +139,8 @@ def generate_hash():
             else:
                 write_path = os.path.join(
                     os.path.basename(os.path.normpath(path)), name)
+
+            write_path = os.path.join(path.replace(application_path, ''), name)
 
             file_path = os.path.join(path, name)
             file_target = open(file_path, 'rb')
