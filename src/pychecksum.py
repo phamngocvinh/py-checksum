@@ -1,41 +1,42 @@
 #!/usr/bin/python3
-from http.server import executable
-from pickle import TRUE
 import sys
 import os
 import hashlib
 
 VERSION = 'v1.0'
 HASHED_FILE = 'PyChecksum.hash'
+RESULT_FILE = 'PyCheckResult.txt'
 
 
+# Main process
 def main():
-    global output_path
     global application_path
     global executable_name
 
     print(f"PyChecksum-{VERSION}")
+
     if getattr(sys, 'frozen', False):
-        # If the application is run as a bundle, the PyInstaller bootloader
-        # extends the sys module by a flag frozen=True and sets the app
-        # path into variable _MEIPASS'.
+        # If run as exe
         application_path = os.path.dirname(sys.executable)
+        executable_name = sys.executable
     else:
+        # If run as script
         application_path = os.path.dirname(os.path.abspath(__file__))
+        executable_name = os.path.basename(__file__)
 
-    output_path = os.path.basename(os.path.normpath(application_path))
-    executable_name = sys.executable
-
+    # Check if hashed file exists
     is_hash_exists = os.path.exists(os.path.join(application_path,
                                                  HASHED_FILE))
-
+    # If hashed file not exists, run Generate hash
     if not is_hash_exists:
-        print('Generate Hash')
+        print('Generating Hash')
         generate_hash()
+    # If hashed file exists, run Verify hash
     else:
-        print('Verify Hash')
+        print('Verifing File')
         verify_file()
 
+    print("OK")
     input("Press enter to exit")
     return
 
@@ -44,26 +45,45 @@ def verify_file():
 
     passed_list = []
     failed_list = []
+
+    # File path for writing result.
+    # Cannot use line in loop because line
+    # will be replace with new value when write.
     file_path = ''
+
+    # If one hash is not matched,
+    # don't need to check other.
+    # Skip to next file
     is_next = False
+
     passed_md5 = False
     passed_sha256 = False
     passed_sha512 = False
+    passed_sha3_256 = False
+    passed_sha3_512 = False
+    passed_blake2b = False
+    passed_blake2s = False
 
+    # Open hashed files list
     file_hash = open(os.path.join(application_path, HASHED_FILE), 'r')
+
     lines = file_hash.readlines()
     for line in lines:
         line = line.strip()
 
-        if passed_md5 and passed_sha256 and passed_sha512:
-            passed_list.append(file_path)
-
+        # If empty line
         if not line:
             continue
 
+        if (passed_md5 and passed_sha256 and passed_sha512 and passed_sha3_256
+                and passed_sha3_512 and passed_blake2b and passed_blake2s):
+            passed_list.append(file_path)
+
+        # If already failed one check, skip others
         if (line.startswith('md5:') or line.startswith('sha256:')
                 or line.startswith('sha512:')) and is_next:
             continue
+        # If line is file name
         else:
             is_next = False
 
@@ -85,8 +105,34 @@ def verify_file():
             else:
                 failed_list.append(file_path)
                 is_next = True
+        elif line.startswith('sha3-256:'):
+            if line.split(':')[1] == sha3_256.hexdigest():
+                passed_sha3_256 = True
+            else:
+                failed_list.append(file_path)
+                is_next = True
+        elif line.startswith('sha3-512:'):
+            if line.split(':')[1] == sha3_512.hexdigest():
+                passed_sha3_512 = True
+            else:
+                failed_list.append(file_path)
+                is_next = True
+        elif line.startswith('blake2b:'):
+            if line.split(':')[1] == blake2b.hexdigest():
+                passed_blake2b = True
+            else:
+                failed_list.append(file_path)
+                is_next = True
+        elif line.startswith('blake2s:'):
+            if line.split(':')[1] == blake2s.hexdigest():
+                passed_blake2s = True
+            else:
+                failed_list.append(file_path)
+                is_next = True
+        # If line is file name
         else:
             is_next = False
+
             file_target = open(
                 os.path.join(application_path, line.strip('\\')), 'rb')
             content = file_target.read()
@@ -103,12 +149,26 @@ def verify_file():
             sha512 = hashlib.sha512()
             sha512.update(content)
 
+            passed_sha3_256 = False
+            sha3_256 = hashlib.sha3_256()
+            sha3_256.update(content)
+
+            passed_sha3_512 = False
+            sha3_512 = hashlib.sha3_512()
+            sha3_512.update(content)
+
+            passed_blake2b = False
+            blake2b = hashlib.blake2b()
+            blake2b.update(content)
+
+            passed_blake2s = False
+            blake2s = hashlib.blake2s()
+            blake2s.update(content)
+
             file_path = line
 
-    passed_list = list(dict.fromkeys(passed_list))
-
-    file_result = open(os.path.join(application_path, 'PyCheckResult.txt'),
-                       'w')
+    # Write result
+    file_result = open(os.path.join(application_path, RESULT_FILE), 'w')
 
     file_result.write('PASSED:\n')
     for file in passed_list:
@@ -125,23 +185,26 @@ def verify_file():
 
 
 def generate_hash():
+
+    # Create hash output file
     file_hash = open(os.path.join(application_path, HASHED_FILE), 'w')
 
+    # Loop through all files and directories in current path
     for path, subdirs, files in os.walk(application_path):
         for name in files:
+
             if name == HASHED_FILE:
+                # Don't hash output file
                 continue
             elif name == os.path.basename(executable_name):
+                # Don't hash exe file
                 continue
 
-            if path == application_path:
-                write_path = name
-            else:
-                write_path = os.path.join(
-                    os.path.basename(os.path.normpath(path)), name)
-
+            # Remove abosolute path
+            # Keep sub-folder and file name
             write_path = os.path.join(path.replace(application_path, ''), name)
 
+            # Open file to hash
             file_path = os.path.join(path, name)
             file_target = open(file_path, 'rb')
             content = file_target.read()
@@ -155,10 +218,26 @@ def generate_hash():
             sha512 = hashlib.sha512()
             sha512.update(content)
 
+            sha3_256 = hashlib.sha3_256()
+            sha3_256.update(content)
+
+            sha3_512 = hashlib.sha3_512()
+            sha3_512.update(content)
+
+            blake2b = hashlib.blake2b()
+            blake2b.update(content)
+
+            blake2s = hashlib.blake2s()
+            blake2s.update(content)
+
             file_hash.write(f'{write_path}\n')
             file_hash.write(f'md5:{md5.hexdigest()}\n')
             file_hash.write(f'sha256:{sha256.hexdigest()}\n')
             file_hash.write(f'sha512:{sha512.hexdigest()}\n')
+            file_hash.write(f'sha3-256:{sha3_256.hexdigest()}\n')
+            file_hash.write(f'sha3-512:{sha3_512.hexdigest()}\n')
+            file_hash.write(f'blake2b:{blake2b.hexdigest()}\n')
+            file_hash.write(f'blake2s:{blake2s.hexdigest()}\n')
             file_hash.write('\n')
 
             print(f'Hashed: {file_path}')
