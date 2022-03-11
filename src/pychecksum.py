@@ -6,6 +6,7 @@ import os
 import hashlib
 
 VERSION = 'v1.0'
+HASHED_FILE = 'PyChecksum.hash'
 
 
 def main():
@@ -25,8 +26,8 @@ def main():
     output_path = os.path.basename(os.path.normpath(application_path))
     executable_name = sys.executable
 
-    is_hash_exists = os.path.exists(
-        os.path.join(application_path, 'PyChecksum.hash'))
+    is_hash_exists = os.path.exists(os.path.join(application_path,
+                                                 HASHED_FILE))
 
     if not is_hash_exists:
         print('Generate Hash')
@@ -49,31 +50,24 @@ def verify_file():
     passed_sha256 = False
     passed_sha512 = False
 
-    file_hash = open(os.path.join(application_path, 'PyChecksum.hash'), 'r')
+    file_hash = open(os.path.join(application_path, HASHED_FILE), 'r')
     lines = file_hash.readlines()
     for line in lines:
         line = line.strip()
 
-        if line.startswith('@'):
-            is_next = False
-            file_target = open(line[1:], 'rb')
-            content = file_target.read()
+        if passed_md5 and passed_sha256 and passed_sha512:
+            passed_list.append(file_path)
 
-            md5 = hashlib.md5()
-            md5.update(content)
-
-            sha256 = hashlib.sha256()
-            sha256.update(content)
-
-            sha512 = hashlib.sha512()
-            sha512.update(content)
-
-            file_path = line[1:]
-
-        elif is_next:
+        if not line:
             continue
 
-        elif line.startswith('md5:'):
+        if (line.startswith('md5:') or line.startswith('sha256:')
+                or line.startswith('sha512:')) and is_next:
+            continue
+        else:
+            is_next = False
+
+        if line.startswith('md5:'):
             if line.split(':')[1] == md5.hexdigest():
                 passed_md5 = True
             else:
@@ -91,9 +85,24 @@ def verify_file():
             else:
                 failed_list.append(file_path)
                 is_next = True
+        else:
+            is_next = False
+            file_target = open(os.path.join(application_path, line), 'rb')
+            content = file_target.read()
 
-        if passed_md5 and passed_sha256 and passed_sha512:
-            passed_list.append(file_path)
+            passed_md5 = False
+            md5 = hashlib.md5()
+            md5.update(content)
+
+            passed_sha256 = False
+            sha256 = hashlib.sha256()
+            sha256.update(content)
+
+            passed_sha512 = False
+            sha512 = hashlib.sha512()
+            sha512.update(content)
+
+            file_path = line
 
     passed_list = list(dict.fromkeys(passed_list))
 
@@ -115,14 +124,20 @@ def verify_file():
 
 
 def generate_hash():
-    file_hash = open(os.path.join(application_path, 'PyChecksum.hash'), 'w')
+    file_hash = open(os.path.join(application_path, HASHED_FILE), 'w')
 
     for path, subdirs, files in os.walk(application_path):
         for name in files:
-            if name == 'PyChecksum.hash':
+            if name == HASHED_FILE:
                 continue
             elif name == os.path.basename(executable_name):
                 continue
+
+            if path == application_path:
+                write_path = name
+            else:
+                write_path = os.path.join(
+                    os.path.basename(os.path.normpath(path)), name)
 
             file_path = os.path.join(path, name)
             file_target = open(file_path, 'rb')
@@ -137,7 +152,7 @@ def generate_hash():
             sha512 = hashlib.sha512()
             sha512.update(content)
 
-            file_hash.write(f'@{file_path}\n')
+            file_hash.write(f'{write_path}\n')
             file_hash.write(f'md5:{md5.hexdigest()}\n')
             file_hash.write(f'sha256:{sha256.hexdigest()}\n')
             file_hash.write(f'sha512:{sha512.hexdigest()}\n')
