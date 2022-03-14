@@ -71,13 +71,20 @@ def verify_file():
     for line in lines:
         line = line.strip()
 
-        # If empty line
-        if not line:
-            continue
-
         if (passed_md5 and passed_sha256 and passed_sha512 and passed_sha3_256
                 and passed_sha3_512 and passed_blake2b and passed_blake2s):
             passed_list.append(file_path)
+            passed_md5 = False
+            passed_sha256 = False
+            passed_sha512 = False
+            passed_sha3_256 = False
+            passed_sha3_512 = False
+            passed_blake2b = False
+            passed_blake2s = False
+
+        # If empty line
+        if not line:
+            continue
 
         # If already failed one check, skip others
         if (line.startswith('md5:') or line.startswith('sha256:')
@@ -137,31 +144,24 @@ def verify_file():
                 os.path.join(application_path, line.strip('\\')), 'rb')
             content = file_target.read()
 
-            passed_md5 = False
             md5 = hashlib.md5()
             md5.update(content)
 
-            passed_sha256 = False
             sha256 = hashlib.sha256()
             sha256.update(content)
 
-            passed_sha512 = False
             sha512 = hashlib.sha512()
             sha512.update(content)
 
-            passed_sha3_256 = False
             sha3_256 = hashlib.sha3_256()
             sha3_256.update(content)
 
-            passed_sha3_512 = False
             sha3_512 = hashlib.sha3_512()
             sha3_512.update(content)
 
-            passed_blake2b = False
             blake2b = hashlib.blake2b()
             blake2b.update(content)
 
-            passed_blake2s = False
             blake2s = hashlib.blake2s()
             blake2s.update(content)
 
