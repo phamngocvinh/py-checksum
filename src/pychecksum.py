@@ -2,14 +2,15 @@
 import sys
 import os
 import hashlib
-from progress.bar import ChargingBar
+from progress.bar import IncrementalBar
 
 VERSION = 'v1.1.0'
 HASHED_FILE = 'PyChecksum.hash'
 RESULT_FILE = 'PyCheckResult.txt'
 
 
-class LoadingBar(ChargingBar):
+# Process Bar
+class ProcessBar(IncrementalBar):
     message = 'Loading'
     suffix = '%(percent)d%% [%(index)d/%(max)d] - %(elapsed)ds'
 
@@ -81,12 +82,28 @@ def verify_file():
     # Open hashed files list
     file_hash = open(os.path.join(application_path, HASHED_FILE), 'r')
 
+    # Read entire file
     lines = file_hash.readlines()
+
+    # Get all files count
+    file_count = 0
+    for line in lines:
+        line = line.strip()
+        if not (line.startswith('sha256:') or line.startswith('sha512:')
+                or line.startswith('sha3-256:') or line.startswith('sha3-512:')
+                or line.startswith('blake2b:') or line.startswith('blake2s:')
+                or line.startswith('md5:') or line):
+            file_count += 1
+
+    # Process bar
+    bar = ProcessBar('Processing', max=file_count)
+
     for line in lines:
         line = line.strip()
 
         if (passed_md5 and passed_sha256 and passed_sha512 and passed_sha3_256
                 and passed_sha3_512 and passed_blake2b and passed_blake2s):
+            bar.next()
             passed_list.append(file_path)
             passed_md5 = False
             passed_sha256 = False
@@ -101,8 +118,11 @@ def verify_file():
             continue
 
         # If already failed one check, skip others
-        if (line.startswith('md5:') or line.startswith('sha256:')
-                or line.startswith('sha512:')) and is_next:
+        if (line.startswith('sha256:') or line.startswith('sha512:')
+                or line.startswith('sha3-256:') or line.startswith('sha3-512:')
+                or line.startswith('blake2b:') or line.startswith('blake2s:')
+                or line.startswith('md5:')) and is_next:
+            bar.next()
             continue
         # If line is file name
         else:
@@ -155,7 +175,7 @@ def verify_file():
             is_next = False
 
             path = os.path.join(application_path, line.strip('\\'))
-            print(f'Verifing: {path}')
+            # print(f'Verifing: {path}')
 
             file_target = open(path, 'rb')
             content = file_target.read()
@@ -183,6 +203,8 @@ def verify_file():
 
             file_path = line
 
+    bar.finish()
+
     # Write result
     file_result = open(os.path.join(application_path, RESULT_FILE), 'w')
 
@@ -206,23 +228,15 @@ def generate_hash():
     file_count = 0
     for path, subdirs, files in os.walk(application_path):
         for file in files:
-
-            if file == HASHED_FILE:
-                # Don't hash output file
-                continue
-            elif file == os.path.basename(executable_name):
-                # Don't hash exe file
-                continue
-
-            file_count += 1
-    # Minus executable file
-    file_count -= 1
+            if file != HASHED_FILE and file != os.path.basename(
+                    executable_name):
+                file_count += 1
 
     # Create hash output file
     file_hash = open(os.path.join(application_path, HASHED_FILE), 'w')
 
     # Process bar
-    bar = LoadingBar('Processing', max=file_count)
+    bar = ProcessBar('Processing', max=file_count)
 
     # Loop through all files and directories in current path
     for path, subdirs, files in os.walk(application_path):
