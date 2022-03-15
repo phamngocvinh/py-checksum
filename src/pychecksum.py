@@ -214,6 +214,8 @@ def generate_hash():
 
             # Open file to hash
             file_path = os.path.join(path, name)
+            print(f'Hashing: {file_path}')
+
             file_target = open(file_path, 'rb')
             content = file_target.read()
 
@@ -247,8 +249,6 @@ def generate_hash():
             file_hash.write(f'blake2b:{blake2b.hexdigest()}\n')
             file_hash.write(f'blake2s:{blake2s.hexdigest()}\n')
             file_hash.write('\n')
-
-            print(f'Hashed: {file_path}')
 
     file_hash.close()
     return
