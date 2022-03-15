@@ -3,7 +3,7 @@ import sys
 import os
 import hashlib
 
-VERSION = 'v1.0'
+VERSION = 'v1.1.0'
 HASHED_FILE = 'PyChecksum.hash'
 RESULT_FILE = 'PyCheckResult.txt'
 
@@ -24,9 +24,17 @@ def main():
         application_path = os.path.dirname(os.path.abspath(__file__))
         executable_name = os.path.basename(__file__)
 
+    # Check for empty directory
+    files = os.listdir(application_path)
+    if len(files) == 1:
+        print('Warning: Directory is empty')
+        input("Press enter to exit")
+        return
+
     # Check if hashed file exists
     is_hash_exists = os.path.exists(os.path.join(application_path,
                                                  HASHED_FILE))
+
     # If hashed file not exists, run Generate hash
     if not is_hash_exists:
         print('Generating Hash')
