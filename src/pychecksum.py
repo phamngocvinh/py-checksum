@@ -12,7 +12,7 @@ RESULT_FILE = 'PyCheckResult.txt'
 # Process Bar
 class ProcessBar(IncrementalBar):
     message = 'Loading'
-    suffix = '%(percent)d%% [%(index)d/%(max)d] - %(elapsed)ds'
+    suffix = '%(percent)d%% [%(index)d/%(max)d] - %(eta_td)s'
 
 
 # Main process
