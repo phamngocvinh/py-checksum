@@ -86,24 +86,24 @@ def verify_file():
     lines = file_hash.readlines()
 
     # Get all files count
-    file_count = 0
+    bar_count = 0
     for line in lines:
         line = line.strip()
         if not (line.startswith('sha256:') or line.startswith('sha512:')
                 or line.startswith('sha3-256:') or line.startswith('sha3-512:')
                 or line.startswith('blake2b:') or line.startswith('blake2s:')
                 or line.startswith('md5:') or line):
-            file_count += 1
+            bar_count += 1
+    bar_count *= 7
 
     # Process bar
-    bar = ProcessBar('Processing', max=file_count)
+    bar = ProcessBar('Processing', max=bar_count)
 
     for line in lines:
         line = line.strip()
 
         if (passed_md5 and passed_sha256 and passed_sha512 and passed_sha3_256
                 and passed_sha3_512 and passed_blake2b and passed_blake2s):
-            bar.next()
             passed_list.append(file_path)
             passed_md5 = False
             passed_sha256 = False
@@ -122,7 +122,6 @@ def verify_file():
                 or line.startswith('sha3-256:') or line.startswith('sha3-512:')
                 or line.startswith('blake2b:') or line.startswith('blake2s:')
                 or line.startswith('md5:')) and is_next:
-            bar.next()
             continue
         # If line is file name
         else:
@@ -182,24 +181,31 @@ def verify_file():
 
             md5 = hashlib.md5()
             md5.update(content)
+            bar.next()
 
             sha256 = hashlib.sha256()
             sha256.update(content)
+            bar.next()
 
             sha512 = hashlib.sha512()
             sha512.update(content)
+            bar.next()
 
             sha3_256 = hashlib.sha3_256()
             sha3_256.update(content)
+            bar.next()
 
             sha3_512 = hashlib.sha3_512()
             sha3_512.update(content)
+            bar.next()
 
             blake2b = hashlib.blake2b()
             blake2b.update(content)
+            bar.next()
 
             blake2s = hashlib.blake2s()
             blake2s.update(content)
+            bar.next()
 
             file_path = line
 
@@ -225,18 +231,19 @@ def verify_file():
 def generate_hash():
 
     # Get all files count
-    file_count = 0
+    bar_count = 0
     for path, subdirs, files in os.walk(application_path):
         for file in files:
             if file != HASHED_FILE and file != os.path.basename(
                     executable_name):
-                file_count += 1
+                bar_count += 1
+    bar_count *= 7
 
     # Create hash output file
     file_hash = open(os.path.join(application_path, HASHED_FILE), 'w')
 
     # Process bar
-    bar = ProcessBar('Processing', max=file_count)
+    bar = ProcessBar('Processing', max=bar_count)
 
     # Loop through all files and directories in current path
     for path, subdirs, files in os.walk(application_path):
@@ -261,24 +268,31 @@ def generate_hash():
 
             md5 = hashlib.md5()
             md5.update(content)
+            bar.next()
 
             sha256 = hashlib.sha256()
             sha256.update(content)
+            bar.next()
 
             sha512 = hashlib.sha512()
             sha512.update(content)
+            bar.next()
 
             sha3_256 = hashlib.sha3_256()
             sha3_256.update(content)
+            bar.next()
 
             sha3_512 = hashlib.sha3_512()
             sha3_512.update(content)
+            bar.next()
 
             blake2b = hashlib.blake2b()
             blake2b.update(content)
+            bar.next()
 
             blake2s = hashlib.blake2s()
             blake2s.update(content)
+            bar.next()
 
             file_hash.write(f'{write_path}\n')
             file_hash.write(f'md5:{md5.hexdigest()}\n')
@@ -289,8 +303,6 @@ def generate_hash():
             file_hash.write(f'blake2b:{blake2b.hexdigest()}\n')
             file_hash.write(f'blake2s:{blake2s.hexdigest()}\n')
             file_hash.write('\n')
-
-            bar.next()
 
     bar.finish()
     file_hash.close()
