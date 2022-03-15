@@ -2,10 +2,16 @@
 import sys
 import os
 import hashlib
+from progress.bar import ChargingBar
 
 VERSION = 'v1.1.0'
 HASHED_FILE = 'PyChecksum.hash'
 RESULT_FILE = 'PyCheckResult.txt'
+
+
+class LoadingBar(ChargingBar):
+    message = 'Loading'
+    suffix = '%(percent)d%% [%(index)d/%(max)d] - %(elapsed)ds'
 
 
 # Main process
@@ -13,7 +19,7 @@ def main():
     global application_path
     global executable_name
 
-    print(f"PyChecksum-{VERSION}")
+    print(f'PyChecksum-{VERSION}')
 
     if getattr(sys, 'frozen', False):
         # If run as exe
@@ -28,7 +34,7 @@ def main():
     files = os.listdir(application_path)
     if len(files) == 1:
         print('Warning: Directory is empty')
-        input("Press enter to exit")
+        input('Press enter to exit')
         return
 
     # Check if hashed file exists
@@ -44,8 +50,8 @@ def main():
         print('Verify Hashes')
         verify_file()
 
-    print("OK")
-    input("Press enter to exit")
+    print('\rOK')
+    input('\rPress enter to exit')
     return
 
 
@@ -196,8 +202,27 @@ def verify_file():
 
 def generate_hash():
 
+    # Get all files count
+    file_count = 0
+    for path, subdirs, files in os.walk(application_path):
+        for file in files:
+
+            if file == HASHED_FILE:
+                # Don't hash output file
+                continue
+            elif file == os.path.basename(executable_name):
+                # Don't hash exe file
+                continue
+
+            file_count += 1
+    # Minus executable file
+    file_count -= 1
+
     # Create hash output file
     file_hash = open(os.path.join(application_path, HASHED_FILE), 'w')
+
+    # Process bar
+    bar = LoadingBar('Processing', max=file_count)
 
     # Loop through all files and directories in current path
     for path, subdirs, files in os.walk(application_path):
@@ -216,7 +241,6 @@ def generate_hash():
 
             # Open file to hash
             file_path = os.path.join(path, name)
-            print(f'Hashing: {file_path}')
 
             file_target = open(file_path, 'rb')
             content = file_target.read()
@@ -252,9 +276,12 @@ def generate_hash():
             file_hash.write(f'blake2s:{blake2s.hexdigest()}\n')
             file_hash.write('\n')
 
+            bar.next()
+
+    bar.finish()
     file_hash.close()
     return
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
