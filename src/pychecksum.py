@@ -37,11 +37,11 @@ def main():
 
     # If hashed file not exists, run Generate hash
     if not is_hash_exists:
-        print('Generating Hash')
+        print('Generate Hashes')
         generate_hash()
     # If hashed file exists, run Verify hash
     else:
-        print('Verifing File')
+        print('Verify Hashes')
         verify_file()
 
     print("OK")
@@ -148,8 +148,10 @@ def verify_file():
         else:
             is_next = False
 
-            file_target = open(
-                os.path.join(application_path, line.strip('\\')), 'rb')
+            path = os.path.join(application_path, line.strip('\\'))
+            print(f'Verifing: {path}')
+
+            file_target = open(path, 'rb')
             content = file_target.read()
 
             md5 = hashlib.md5()
