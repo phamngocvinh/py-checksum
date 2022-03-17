@@ -1,4 +1,18 @@
 #!/usr/bin/python3
+# Copyright (C) 2022  Pham Ngoc Vinh
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import sys
 import os
 import hashlib
@@ -20,7 +34,13 @@ def main():
     global application_path
     global executable_name
 
-    print(f'PyChecksum-{VERSION}')
+    print(f'PyChecksum-{VERSION} Copyright (C) 2022  Pham Ngoc Vinh')
+    license_info = """
+    This program comes with ABSOLUTELY NO WARRANTY;
+    This is free software, and you are welcome to redistribute it
+    under certain conditions;
+    """
+    print(license_info)
 
     if getattr(sys, 'frozen', False):
         # If run as exe
