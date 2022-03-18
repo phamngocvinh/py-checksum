@@ -71,9 +71,9 @@ To get a local copy up and running, follow these simple steps.
 
 <!-- USAGE -->
 ## :man_teacher: Usage
-1. The first time you run EXE, it will generate a hash for all file in the current folder (include sub-folder).
+1. The first time you run, it will generate a hash for all file in the current folder (include sub-folder).
 2. `PyChecksum.hash` containing all file's hashes will be generated.
-3. Any time `PyChecksum.hash` exists, if you run EXE again, it will check the current folder file's hash with hash in `PyChecksum.hash`
+3. Any time `PyChecksum.hash` exists, if you run again, it will check the current folder file's hash with hash in `PyChecksum.hash`
 4. `PyCheckResult.txt` containing check result will be generated.
 
 _For more examples, please refer to the [Documentation](https://github.com/phamngocvinh/py-checksum/wiki)_
