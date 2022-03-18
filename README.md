@@ -66,7 +66,7 @@ To get a local copy up and running, follow these simple steps.
    ```sh
    pip install -r requirements.txt
    ```
-3. Run `build.bat`
+3. Run `build` script
 4. Executable file will be generated in `dist` folder
 
 <!-- USAGE -->
