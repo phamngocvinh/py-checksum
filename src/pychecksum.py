@@ -18,7 +18,7 @@ import os
 import hashlib
 from progress.bar import IncrementalBar
 
-VERSION = 'v1.1.0'
+VERSION = 'v1.0.2'
 HASHED_FILE = 'PyChecksum.hash'
 RESULT_FILE = 'PyCheckResult.txt'
 
@@ -193,7 +193,7 @@ def verify_file():
         else:
             is_next = False
 
-            path = os.path.join(application_path, line.strip('\\'))
+            path = os.path.join(application_path, line.strip(os.sep))
             # print(f'Verifing: {path}')
 
             file_target = open(path, 'rb')
