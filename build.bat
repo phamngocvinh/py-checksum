@@ -1,1 +1,1 @@
-pyinstaller ./src/pychecksum.py --onefile --name PyChecksum-v1.0.2 --version-file version.rc --icon ./images/icons/icon.ico 
+pyinstaller ./src/pychecksum.py --onefile --name PyChecksum-v1.0.2 --version-file version.rc --icon ./images/icons/icon.ico
