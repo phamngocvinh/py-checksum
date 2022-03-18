@@ -18,7 +18,7 @@ import os
 import hashlib
 from progress.bar import IncrementalBar
 
-VERSION = 'v1.1.0'
+VERSION = 'v1.0.1'
 HASHED_FILE = 'PyChecksum.hash'
 RESULT_FILE = 'PyCheckResult.txt'
 
