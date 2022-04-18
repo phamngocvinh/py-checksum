@@ -54,14 +54,6 @@ def main(argv):
     is_update = False
     is_user_set_path = False
 
-    print(f'PyChecksum-{VERSION} Copyright (C) 2022  Pham Ngoc Vinh')
-    license_info = """
-    This program comes with ABSOLUTELY NO WARRANTY;
-    This is free software, and you are welcome to redistribute it
-    under certain conditions;
-    """
-    print(license_info)
-
     # Get user input command
     try:
         opts, args = getopt.getopt(
@@ -89,6 +81,14 @@ def main(argv):
     if is_update:
         update_app()
         sys.exit()
+
+    print(f'PyChecksum-{VERSION} Copyright (C) 2022  Pham Ngoc Vinh')
+    license_info = """
+    This program comes with ABSOLUTELY NO WARRANTY;
+    This is free software, and you are welcome to redistribute it
+    under certain conditions;
+    """
+    print(license_info)
 
     # If run as exe
     if getattr(sys, 'frozen', False):
