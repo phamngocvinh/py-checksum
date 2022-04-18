@@ -33,7 +33,16 @@ Options:
 
 Commands:
     -f  --folder        Specify target folder
-    -a  --algorithm     Specify hash algorithm
+    -a  --algorithm     Specify hash algorithm, seperated by comma
+
+Available Algorithm:
+    MD5
+    SHA256
+    SHA512
+    SHA3-256
+    SHA3-512
+    BLAKE2b
+    BLAKE2s
 """
 
 
