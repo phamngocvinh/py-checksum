@@ -16,11 +16,25 @@
 import sys
 import os
 import hashlib
+import getopt
 from progress.bar import IncrementalBar
 
-VERSION = 'v1.0.2'
+VERSION = 'v1.1.0'
 HASHED_FILE = 'PyChecksum.hash'
 RESULT_FILE = 'PyCheckResult.txt'
+HELP_TEXT = """
+Usage:
+    PyChecksum.exe [option] [command]
+
+Options:
+    -h  --help          Show this help message
+    -v  --version       Show current version
+    -u  --update        Check for update
+
+Commands:
+    -f  --folder        Specify target folder
+    -a  --algorithm     Specify hash algorithm
+"""
 
 
 # Process Bar
@@ -30,9 +44,15 @@ class ProcessBar(IncrementalBar):
 
 
 # Main process
-def main():
+def main(argv):
+
     global application_path
     global executable_name
+    global algorithm_options
+
+    application_path = ''
+    is_update = False
+    is_user_set_path = False
 
     print(f'PyChecksum-{VERSION} Copyright (C) 2022  Pham Ngoc Vinh')
     license_info = """
@@ -42,21 +62,66 @@ def main():
     """
     print(license_info)
 
+    # Get user input command
+    try:
+        opts, args = getopt.getopt(
+            argv, "hvuf:a:",
+            ["help", "version", "update", "folder=", "algorithm="])
+    except getopt.GetoptError:
+        print('Use PyChecksum.exe -h or --help for more informations')
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt in ('-h', "--help"):
+            print(HELP_TEXT)
+            sys.exit()
+        elif opt in ("-v", "--version"):
+            print(VERSION)
+            sys.exit()
+        elif opt in ("-u", "--update"):
+            is_update = True
+        elif opt in ("-f", "--folder"):
+            application_path = arg.strip()
+            is_user_set_path = True
+        elif opt in ("-a", "--algorithm"):
+            algorithm_options = arg.strip()
+
+    # Check for Application update
+    if is_update:
+        update_app()
+        sys.exit()
+
+    # If run as exe
     if getattr(sys, 'frozen', False):
-        # If run as exe
-        application_path = os.path.dirname(sys.executable)
+        # If path is not set by argument,
+        # get execution file path
+        if len(application_path) == 0:
+            application_path = os.path.dirname(sys.executable)
         executable_name = sys.executable
-    else:
-        # If run as script
-        application_path = os.path.dirname(os.path.abspath(__file__))
+    else:  # If run as script
+        # If path is not set by argument,
+        # get execution file path
+        if len(application_path) == 0:
+            application_path = os.path.dirname(os.path.abspath(__file__))
         executable_name = os.path.basename(__file__)
+
+    # Check valid directory
+    if not os.path.isdir(application_path):
+        print('Warning: Invalid folder path')
+        input('Press enter to exit')
+        return
 
     # Check for empty directory
     files = os.listdir(application_path)
-    if len(files) == 1:
-        print('Warning: Directory is empty')
-        input('Press enter to exit')
-        return
+    if not is_user_set_path:
+        if len(files) == 1:
+            print('Warning: Directory is empty')
+            input('Press enter to exit')
+            return
+    else:
+        if len(files) == 0:
+            print('Warning: Directory is empty')
+            input('Press enter to exit')
+            return
 
     # Check if hashed file exists
     is_hash_exists = os.path.exists(os.path.join(application_path,
@@ -76,6 +141,14 @@ def main():
     return
 
 
+# Check for application update
+def update_app():
+    print('Check for update')
+    print('Coming soon')
+    pass
+
+
+# Run verify process
 def verify_file():
 
     passed_list = []
@@ -248,6 +321,7 @@ def verify_file():
     return
 
 
+# Run generate process
 def generate_hash():
 
     # Get all files count
@@ -329,5 +403,6 @@ def generate_hash():
     return
 
 
+# Main process
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1:])
