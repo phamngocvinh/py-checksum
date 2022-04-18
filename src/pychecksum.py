@@ -17,6 +17,7 @@ import sys
 import os
 import hashlib
 import getopt
+import requests
 from progress.bar import IncrementalBar
 
 VERSION = 'v1.1.0'
@@ -152,9 +153,18 @@ def main(argv):
 
 # Check for application update
 def update_app():
-    print('Check for update')
-    print('Coming soon')
-    pass
+    response = requests.get(
+        "https://api.github.com/repos/phamngocvinh/py-checksum/releases/latest"
+    )
+    latest_version = response.json()["tag_name"]
+    if response.json()["tag_name"] > VERSION:
+        print(f'Current version: {VERSION}')
+        print(f'New version availible: {latest_version}')
+        print(
+            'Download link: https://github.com/phamngocvinh/py-checksum/releases/latest'
+        )
+    else:
+        print('You\'re using the latest version')
 
 
 # Run verify process
