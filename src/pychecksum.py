@@ -20,6 +20,9 @@ import getopt
 import requests
 from progress.bar import IncrementalBar
 
+ALGORITHM = [
+    'md5', 'sha256', 'sha512', 'sha3-256', 'sha3-512', 'blake2b', 'blake2s'
+]
 VERSION = 'v1.1.0'
 HASHED_FILE = 'PyChecksum.hash'
 RESULT_FILE = 'PyCheckResult.txt'
@@ -30,11 +33,11 @@ Usage:
 Options:
     -h  --help          Show this help message
     -v  --version       Show current version
-    -u  --update        Check for update
+    -u  --update        Check for application update
 
 Commands:
     -f  --folder        Specify target folder
-    -a  --algorithm     Specify hash algorithm, seperated by comma
+    -a  --algorithm     Specify hash algorithm, separated by comma
 
 Available Algorithm:
     MD5
@@ -388,6 +391,17 @@ def verify_file():
 # Run generate process
 def generate_hash():
 
+    if is_user_set_algorithm:
+        algorithm_count = 0
+        invalid_algorithm = []
+        for algorithm in algorithm_options:
+            if algorithm in (ALGORITHM):
+                algorithm_count += 1
+            else:
+                invalid_algorithm.append(algorithm)
+        if len(invalid_algorithm) != 0:
+            print(f'Invalid algorithm: {invalid_algorithm}')
+
     # Get all files count
     bar_count = 0
     file_count = 0
@@ -397,7 +411,7 @@ def generate_hash():
                     executable_name):
                 file_count += 1
     if is_user_set_algorithm:
-        bar_count = file_count * len(algorithm_options)
+        bar_count = file_count * algorithm_count
     else:
         bar_count = file_count * 7
 
@@ -453,12 +467,12 @@ def generate_hash():
                     file_hash.write(f'sha512:{sha512.hexdigest()}\n')
                     bar.next()
 
-                if 'sha3_256' in algorithm_options:
+                if 'sha3-256' in algorithm_options:
                     sha3_256.update(content)
                     file_hash.write(f'sha3-256:{sha3_256.hexdigest()}\n')
                     bar.next()
 
-                if 'sha3_512' in algorithm_options:
+                if 'sha3-512' in algorithm_options:
                     sha3_512.update(content)
                     file_hash.write(f'sha3-512:{sha3_512.hexdigest()}\n')
                     bar.next()
