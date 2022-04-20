@@ -59,10 +59,12 @@ def main(argv):
     global application_path
     global executable_name
     global algorithm_options
+    global is_user_set_algorithm
 
     application_path = ''
     is_update = False
     is_user_set_path = False
+    is_user_set_algorithm = False
 
     # Get user input command
     try:
@@ -85,7 +87,8 @@ def main(argv):
             application_path = arg.strip()
             is_user_set_path = True
         elif opt in ("-a", "--algorithm"):
-            algorithm_options = arg.strip()
+            algorithm_options = arg.strip().lower().split(',')
+            is_user_set_algorithm = True
 
     # Check for Application update
     if is_update:
@@ -113,6 +116,12 @@ def main(argv):
         if len(application_path) == 0:
             application_path = os.path.dirname(os.path.abspath(__file__))
         executable_name = os.path.basename(__file__)
+
+    # Check valid algorithm
+    if is_user_set_algorithm and len(algorithm_options) == 0:
+        print('Error: No algorithm was specified')
+        input('Press enter to exit')
+        return
 
     # Check valid directory
     if not os.path.isdir(application_path):
@@ -157,7 +166,7 @@ def update_app():
         "https://api.github.com/repos/phamngocvinh/py-checksum/releases/latest"
     )
     latest_version = response.json()["tag_name"]
-    if response.json()["tag_name"] > VERSION:
+    if latest_version > VERSION:
         print(f'Current version: {VERSION}')
         print(f'New version availible: {latest_version}')
         print(
@@ -183,13 +192,21 @@ def verify_file():
     # Skip to next file
     is_next = False
 
-    passed_md5 = False
-    passed_sha256 = False
-    passed_sha512 = False
-    passed_sha3_256 = False
-    passed_sha3_512 = False
-    passed_blake2b = False
-    passed_blake2s = False
+    is_passed_md5 = False
+    is_passed_sha256 = False
+    is_passed_sha512 = False
+    is_passed_sha3_256 = False
+    is_passed_sha3_512 = False
+    is_passed_blake2b = False
+    is_passed_blake2s = False
+
+    is_check_md5 = False
+    is_check_sha256 = False
+    is_check_sha512 = False
+    is_check_sha3_256 = False
+    is_check_sha3_512 = False
+    is_check_blake2b = False
+    is_check_blake2s = False
 
     # Open hashed files list
     file_hash = open(os.path.join(application_path, HASHED_FILE), 'r')
@@ -201,12 +218,11 @@ def verify_file():
     bar_count = 0
     for line in lines:
         line = line.strip()
-        if not (line.startswith('sha256:') or line.startswith('sha512:')
+        if (line.startswith('sha256:') or line.startswith('sha512:')
                 or line.startswith('sha3-256:') or line.startswith('sha3-512:')
                 or line.startswith('blake2b:') or line.startswith('blake2s:')
-                or line.startswith('md5:') or line):
+                or line.startswith('md5:')):
             bar_count += 1
-    bar_count *= 7
 
     # Process bar
     bar = ProcessBar('Processing', max=bar_count)
@@ -214,20 +230,35 @@ def verify_file():
     for line in lines:
         line = line.strip()
 
-        if (passed_md5 and passed_sha256 and passed_sha512 and passed_sha3_256
-                and passed_sha3_512 and passed_blake2b and passed_blake2s):
-            passed_list.append(file_path)
-            passed_md5 = False
-            passed_sha256 = False
-            passed_sha512 = False
-            passed_sha3_256 = False
-            passed_sha3_512 = False
-            passed_blake2b = False
-            passed_blake2s = False
-
         # If empty line
         if not line:
-            continue
+            if len(file_path) != 0:
+                # Check result
+                is_check_ok = True
+                if is_check_md5 and not is_passed_md5:
+                    is_check_ok = False
+                if is_check_sha256 and not is_passed_sha256:
+                    is_check_ok = False
+                if is_check_sha512 and not is_passed_sha512:
+                    is_check_ok = False
+                if is_check_sha3_256 and not is_passed_sha3_256:
+                    is_check_ok = False
+                if is_check_sha3_512 and not is_passed_sha3_512:
+                    is_check_ok = False
+                if is_check_blake2b and not is_passed_blake2b:
+                    is_check_ok = False
+                if is_check_blake2s and not is_passed_blake2s:
+                    is_check_ok = False
+                if is_check_ok:
+                    passed_list.append(file_path)
+                    is_passed_md5 = False
+                    is_passed_sha256 = False
+                    is_passed_sha512 = False
+                    is_passed_sha3_256 = False
+                    is_passed_sha3_512 = False
+                    is_passed_blake2b = False
+                    is_passed_blake2s = False
+                continue
 
         # If already failed one check, skip others
         if (line.startswith('sha256:') or line.startswith('sha512:')
@@ -240,86 +271,100 @@ def verify_file():
             is_next = False
 
         if line.startswith('md5:'):
-            if line.split(':')[1] == md5.hexdigest():
-                passed_md5 = True
-            else:
-                failed_list.append(file_path)
-                is_next = True
-        elif line.startswith('sha256:'):
-            if line.split(':')[1] == sha256.hexdigest():
-                passed_sha256 = True
-            else:
-                failed_list.append(file_path)
-                is_next = True
-        elif line.startswith('sha512:'):
-            if line.split(':')[1] == sha512.hexdigest():
-                passed_sha512 = True
-            else:
-                failed_list.append(file_path)
-                is_next = True
-        elif line.startswith('sha3-256:'):
-            if line.split(':')[1] == sha3_256.hexdigest():
-                passed_sha3_256 = True
-            else:
-                failed_list.append(file_path)
-                is_next = True
-        elif line.startswith('sha3-512:'):
-            if line.split(':')[1] == sha3_512.hexdigest():
-                passed_sha3_512 = True
-            else:
-                failed_list.append(file_path)
-                is_next = True
-        elif line.startswith('blake2b:'):
-            if line.split(':')[1] == blake2b.hexdigest():
-                passed_blake2b = True
-            else:
-                failed_list.append(file_path)
-                is_next = True
-        elif line.startswith('blake2s:'):
-            if line.split(':')[1] == blake2s.hexdigest():
-                passed_blake2s = True
-            else:
-                failed_list.append(file_path)
-                is_next = True
-        # If line is file name
-        else:
-            is_next = False
-
-            path = os.path.join(application_path, line.strip(os.sep))
-            # print(f'Verifing: {path}')
-
-            file_target = open(path, 'rb')
-            content = file_target.read()
-
+            is_check_md5 = True
             md5 = hashlib.md5()
             md5.update(content)
-            bar.next()
 
+            if line.split(':')[1] == md5.hexdigest():
+                is_passed_md5 = True
+            else:
+                failed_list.append(file_path)
+                is_next = True
+
+            bar.next()
+        elif line.startswith('sha256:'):
+            is_check_sha256 = True
             sha256 = hashlib.sha256()
             sha256.update(content)
-            bar.next()
 
+            if line.split(':')[1] == sha256.hexdigest():
+                is_passed_sha256 = True
+            else:
+                failed_list.append(file_path)
+                is_next = True
+
+            bar.next()
+        elif line.startswith('sha512:'):
+            is_check_sha512 = True
             sha512 = hashlib.sha512()
             sha512.update(content)
-            bar.next()
 
+            if line.split(':')[1] == sha512.hexdigest():
+                is_passed_sha512 = True
+            else:
+                failed_list.append(file_path)
+                is_next = True
+
+            bar.next()
+        elif line.startswith('sha3-256:'):
+            is_check_sha3_256 = True
             sha3_256 = hashlib.sha3_256()
             sha3_256.update(content)
-            bar.next()
 
+            if line.split(':')[1] == sha3_256.hexdigest():
+                is_passed_sha3_256 = True
+            else:
+                failed_list.append(file_path)
+                is_next = True
+
+            bar.next()
+        elif line.startswith('sha3-512:'):
+            is_check_sha3_512 = True
             sha3_512 = hashlib.sha3_512()
             sha3_512.update(content)
-            bar.next()
 
+            if line.split(':')[1] == sha3_512.hexdigest():
+                is_passed_sha3_512 = True
+            else:
+                failed_list.append(file_path)
+                is_next = True
+
+            bar.next()
+        elif line.startswith('blake2b:'):
+            is_check_blake2b = True
             blake2b = hashlib.blake2b()
             blake2b.update(content)
-            bar.next()
 
+            if line.split(':')[1] == blake2b.hexdigest():
+                is_passed_blake2b = True
+            else:
+                failed_list.append(file_path)
+                is_next = True
+
+            bar.next()
+        elif line.startswith('blake2s:'):
+            is_check_blake2s = True
             blake2s = hashlib.blake2s()
             blake2s.update(content)
-            bar.next()
 
-            file_path = line
+            if line.split(':')[1] == blake2s.hexdigest():
+                is_passed_blake2s = True
+            else:
+                failed_list.append(file_path)
+                is_next = True
+
+            bar.next()
+        # If line is file name
+        else:
+            if len(file_path) != 0 or line:
+                is_next = False
+
+                path = os.path.join(application_path, line.strip(os.sep))
+
+                file_target = open(path, 'rb')
+                content = file_target.read()
+
+                file_path = line
 
     bar.finish()
 
@@ -345,12 +390,16 @@ def generate_hash():
 
     # Get all files count
     bar_count = 0
+    file_count = 0
     for path, subdirs, files in os.walk(application_path):
         for file in files:
             if file != HASHED_FILE and file != os.path.basename(
                     executable_name):
-                bar_count += 1
-    bar_count *= 7
+                file_count += 1
+    if is_user_set_algorithm:
+        bar_count = file_count * len(algorithm_options)
+    else:
+        bar_count = file_count * 7
 
     # Create hash output file
     file_hash = open(os.path.join(application_path, HASHED_FILE), 'w')
@@ -378,43 +427,81 @@ def generate_hash():
 
             file_target = open(file_path, 'rb')
             content = file_target.read()
+            file_hash.write(f'{write_path}\n')
 
             md5 = hashlib.md5()
-            md5.update(content)
-            bar.next()
-
             sha256 = hashlib.sha256()
-            sha256.update(content)
-            bar.next()
-
             sha512 = hashlib.sha512()
-            sha512.update(content)
-            bar.next()
-
             sha3_256 = hashlib.sha3_256()
-            sha3_256.update(content)
-            bar.next()
-
             sha3_512 = hashlib.sha3_512()
-            sha3_512.update(content)
-            bar.next()
-
             blake2b = hashlib.blake2b()
-            blake2b.update(content)
-            bar.next()
-
             blake2s = hashlib.blake2s()
-            blake2s.update(content)
-            bar.next()
 
-            file_hash.write(f'{write_path}\n')
-            file_hash.write(f'md5:{md5.hexdigest()}\n')
-            file_hash.write(f'sha256:{sha256.hexdigest()}\n')
-            file_hash.write(f'sha512:{sha512.hexdigest()}\n')
-            file_hash.write(f'sha3-256:{sha3_256.hexdigest()}\n')
-            file_hash.write(f'sha3-512:{sha3_512.hexdigest()}\n')
-            file_hash.write(f'blake2b:{blake2b.hexdigest()}\n')
-            file_hash.write(f'blake2s:{blake2s.hexdigest()}\n')
+            if is_user_set_algorithm:
+                if 'md5' in algorithm_options:
+                    md5.update(content)
+                    file_hash.write(f'md5:{md5.hexdigest()}\n')
+                    bar.next()
+
+                if 'sha256' in algorithm_options:
+                    sha256.update(content)
+                    file_hash.write(f'sha256:{sha256.hexdigest()}\n')
+                    bar.next()
+
+                if 'sha512' in algorithm_options:
+                    sha512.update(content)
+                    file_hash.write(f'sha512:{sha512.hexdigest()}\n')
+                    bar.next()
+
+                if 'sha3_256' in algorithm_options:
+                    sha3_256.update(content)
+                    file_hash.write(f'sha3-256:{sha3_256.hexdigest()}\n')
+                    bar.next()
+
+                if 'sha3_512' in algorithm_options:
+                    sha3_512.update(content)
+                    file_hash.write(f'sha3-512:{sha3_512.hexdigest()}\n')
+                    bar.next()
+
+                if 'blake2b' in algorithm_options:
+                    blake2b.update(content)
+                    file_hash.write(f'blake2b:{blake2b.hexdigest()}\n')
+                    bar.next()
+
+                if 'blake2s' in algorithm_options:
+                    blake2s.update(content)
+                    file_hash.write(f'blake2s:{blake2s.hexdigest()}\n')
+                    bar.next()
+
+            else:
+                md5.update(content)
+                file_hash.write(f'md5:{md5.hexdigest()}\n')
+                bar.next()
+
+                sha256.update(content)
+                file_hash.write(f'sha256:{sha256.hexdigest()}\n')
+                bar.next()
+
+                sha512.update(content)
+                file_hash.write(f'sha512:{sha512.hexdigest()}\n')
+                bar.next()
+
+                sha3_256.update(content)
+                file_hash.write(f'sha3-256:{sha3_256.hexdigest()}\n')
+                bar.next()
+
+                sha3_512.update(content)
+                file_hash.write(f'sha3-512:{sha3_512.hexdigest()}\n')
+                bar.next()
+
+                blake2b.update(content)
+                file_hash.write(f'blake2b:{blake2b.hexdigest()}\n')
+                bar.next()
+
+                blake2s.update(content)
+                file_hash.write(f'blake2s:{blake2s.hexdigest()}\n')
+                bar.next()
+
             file_hash.write('\n')
 
     bar.finish()
