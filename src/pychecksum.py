@@ -13,6 +13,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
+from multiprocessing.dummy import Process
 import sys
 import os
 import hashlib
@@ -219,13 +220,20 @@ def verify_file():
 
     # Get all files count
     bar_count = 0
+    is_skip_file = False
     for line in lines:
         line = line.strip()
-        if (line.startswith('sha256:') or line.startswith('sha512:')
+        if not is_skip_file and (
+                line.startswith('sha256:') or line.startswith('sha512:')
                 or line.startswith('sha3-256:') or line.startswith('sha3-512:')
                 or line.startswith('blake2b:') or line.startswith('blake2s:')
                 or line.startswith('md5:')):
             bar_count += 1
+        elif line:
+            if not os.path.exists(os.path.join(application_path, line.strip(os.sep))):
+                is_skip_file = True
+            else:
+                is_skip_file = False
 
     # Process bar
     bar = ProcessBar('Processing', max=bar_count)
@@ -364,11 +372,18 @@ def verify_file():
 
                 path = os.path.join(application_path, line.strip(os.sep))
 
+                if not os.path.exists(path):
+                    failed_list.append(line)
+                    is_next = True
+                    continue
+
                 file_target = open(path, 'rb')
                 content = file_target.read()
 
                 file_path = line
 
+    for i in range(bar.index, bar.max):
+        bar.next()
     bar.finish()
 
     # Write result
